@@ -1,0 +1,129 @@
+apply plugin: 'org.springframework.boot'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceSets {
+    main {
+        resources {
+            srcDir rootProject.file("config/dev")
+        }
+    }
+}
+
+dependencies {
+    // Corda dependencies.
+    compile "$corda_release_group:corda-rpc:$corda_release_version"
+
+    // CorDapp dependencies.
+    compile project(":contracts")
+    compile project(":workflows")
+
+    compile("org.springframework.boot:spring-boot-starter-websocket:$spring_boot_version") {
+        exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
+    }
+    	
+    compile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
+    compile "org.apache.logging.log4j:log4j-web:${log4j_version}"
+    compile "org.slf4j:jul-to-slf4j:$slf4j_version"
+    
+    // JSF dependencies
+    compile group: 'org.apache.myfaces.core', name: 'myfaces-api', version: '2.3.3'
+    compile group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2.3.3'
+    
+    // Tomcat dependency
+    //compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.17'
+    
+    // Rewrite dependencies (for REST-friendly URLs in JSF)
+    compile group: 'org.ocpsoft.rewrite', name: 'rewrite-servlet', version: '3.4.2.Final'
+    compile group: 'org.ocpsoft.rewrite', name: 'rewrite-integration-faces', version: '3.4.2.Final'
+    compile group: 'org.ocpsoft.rewrite', name: 'rewrite-config-prettyfaces', version: '3.4.2.Final'
+    
+    // Primefaces dependency
+    compile group: 'org.primefaces', name: 'primefaces', version: '7.0'
+    
+    // Lombok dependency to reduce code for getters and setters in JSF
+    compile group: 'org.projectlombok', name: 'lombok', version: '1.18.6'
+    
+    compile group: 'jstl', name: 'jstl', version: '1.2'
+}
+
+task copyClassesIntoWebINF(type: Copy) {
+    from 'build/classes/java/main'
+    into 'src/main/webapp/WEB-INF/classes'
+    println("classes copied to WEB-INF 2")
+}
+
+task deleteClassesFolderBeforeCopy(type: Delete) {
+    delete 'src/main/webapp/WEB-INF/classes'
+    followSymlinks = true
+}
+
+task runPartyAClient(type: JavaExec, dependsOn: assemble) {
+    classpath = sourceSets.main.runtimeClasspath
+    println classpath
+    main = 'com.alabus.cordapp.template.client.Client'
+    args 'localhost:10006', 'user1', 'test'
+}
+
+task runPartyAWebServer(type: JavaExec) {
+	dependsOn 'assemble'
+	dependsOn 'deleteClassesFolderBeforeCopy'
+	dependsOn 'copyClassesIntoWebINF'
+
+	tasks.findByName('deleteClassesFolderBeforeCopy').mustRunAfter 'assemble'
+	tasks.findByName('copyClassesIntoWebINF').mustRunAfter 'deleteClassesFolderBeforeCopy'
+	
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.alabus.cordapp.template.client.webserver.Starter'
+    args '--server.port=10097', '--config.rpc.host=localhost', '--config.rpc.port=10006', '--config.rpc.username=user1', '--config.rpc.password=test'
+}
+
+task runPartyBClient(type: JavaExec, dependsOn: assemble) {
+    classpath = sourceSets.main.runtimeClasspath
+    println classpath
+    main = 'com.alabus.cordapp.template.client.Client'
+    args 'localhost:10007', 'user1', 'test'
+}
+
+task runPartyBWebServer(type: JavaExec) {
+	dependsOn 'assemble'
+	dependsOn 'deleteClassesFolderBeforeCopy'
+	dependsOn 'copyClassesIntoWebINF'
+
+	tasks.findByName('deleteClassesFolderBeforeCopy').mustRunAfter 'assemble'
+	tasks.findByName('copyClassesIntoWebINF').mustRunAfter 'deleteClassesFolderBeforeCopy'
+	
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.alabus.cordapp.template.client.webserver.Starter'
+    args '--server.port=10098', '--config.rpc.host=localhost', '--config.rpc.port=10007', '--config.rpc.username=user1', '--config.rpc.password=test'
+}
+
+
+task runPartyCClient(type: JavaExec, dependsOn: assemble) {
+    classpath = sourceSets.main.runtimeClasspath
+    println classpath
+    main = 'com.alabus.cordapp.template.client.Client'
+    args 'localhost:10010', 'user1', 'test'
+}
+
+task runPartyCWebServer(type: JavaExec) {
+	dependsOn 'assemble'
+	dependsOn 'deleteClassesFolderBeforeCopy'
+	dependsOn 'copyClassesIntoWebINF'
+
+	tasks.findByName('deleteClassesFolderBeforeCopy').mustRunAfter 'assemble'
+	tasks.findByName('copyClassesIntoWebINF').mustRunAfter 'deleteClassesFolderBeforeCopy'
+	
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.alabus.cordapp.template.client.webserver.Starter'
+    args '--server.port=10099', '--config.rpc.host=localhost', '--config.rpc.port=10010', '--config.rpc.username=user1', '--config.rpc.password=test'
+}
+
+
+
+bootJar {
+    baseName = "corda-webserver"
+    version = ""
+}
+
+
