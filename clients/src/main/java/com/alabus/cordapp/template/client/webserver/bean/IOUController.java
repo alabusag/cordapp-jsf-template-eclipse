@@ -79,7 +79,7 @@ public class IOUController {
             throw ex;
         }
     	
-        return "/faces/iou-list.xhtml?faces-redirect=true";
+        return "/template/node/iou-list.xhtml?faces-redirect=true";
     }
     
     public List<SelectItem> getOtherPartySelectItems() {
